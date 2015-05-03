@@ -89,29 +89,24 @@ gulp.task('ts-watcher-server', function() {
  */
 gulp.task('ts-compile', ['ts-compile-client', 'ts-compile-server']);
 
-gulp.task('ts-compile-client', function(done) {    
-    runTSC('src/client', done);
+var tsProjectClient = $.typescript.createProject('src/client/tsconfig.json', { typescript: require('typescript') });
+var tsProjectServer = $.typescript.createProject('src/server/tsconfig.json', { typescript: require('typescript') });
+
+gulp.task('ts-compile-client', function() {    
+    return gulp.src('src/client/**/**.ts')
+        .pipe($.sourcemaps.init())
+        .pipe($.typescript(tsProjectClient, undefined, $.typescript.reporter.longReporter()))
+        .pipe($.sourcemaps.write('.'))
+        .pipe(gulp.dest('src/client'));
 });
 
-gulp.task('ts-compile-server', function(done) {
-    runTSC('src/server', done);
+gulp.task('ts-compile-server', function() {    
+    return gulp.src('src/server/**/**.ts')
+        .pipe($.sourcemaps.init())
+        .pipe($.typescript(tsProjectServer), undefined, $.typescript.reporter.longReporter())
+        .pipe($.sourcemaps.write('.'))
+        .pipe(gulp.dest('src/server'));
 });
-
-function runTSC(directory, done) {
-    var tscjs = path.join(process.cwd(), 'node_modules/typescript/bin/tsc.js');
-    var childProcess = cp.spawn('node', [tscjs, '-p', directory], { cwd: process.cwd() });
-    childProcess.stdout.on('data', function (data) {
-        // Ticino will read the output
-        console.log(data.toString());
-    });
-    childProcess.stderr.on('data', function (data) {
-        // Ticino will read the output
-        console.log(data.toString());
-    });
-    childProcess.on('close', function () {
-        done();
-    });
-}
 
 /**
  * vet the code and create coverage report
